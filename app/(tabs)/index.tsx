@@ -1,7 +1,8 @@
 import {SafeAreaView} from "react-native-safe-area-context";
-import { FlatList, Image, Pressable, Text, TouchableOpacity, View} from "react-native";
+import { FlatList, Image, Pressable, Text, TouchableOpacity, View, Alert} from "react-native";
 import {Fragment} from "react";
 import cn from 'clsx';
+import { router } from "expo-router";
 
 import CartButton from "@/components/CartButton";
 import {images, offers} from "@/constants";
@@ -9,6 +10,26 @@ import useAuthStore from "@/store/auth.store";
 
 export default function Index() {
   const { user } = useAuthStore();
+
+  const handleOfferPress = (offer: any) => {
+    // Navigate to search page with the offer category
+    let searchQuery = '';
+    const title = offer.title.toLowerCase();
+    
+    if (title.includes('burger') || title.includes('combo')) {
+      searchQuery = 'burger';
+    } else if (title.includes('pizza')) {
+      searchQuery = 'pizza';
+    } else if (title.includes('burrito')) {
+      searchQuery = 'burrito';
+    }
+    
+    if (searchQuery) {
+      router.push(`/search?query=${searchQuery}` as any);
+    } else {
+      router.push('/search');
+    }
+  };
 
   return (
       <SafeAreaView className="flex-1 bg-white">
@@ -22,7 +43,8 @@ export default function Index() {
                           <Pressable
                               className={cn("offer-card", isEven ? 'flex-row-reverse' : 'flex-row')}
                               style={{ backgroundColor: item.color }}
-                              android_ripple={{ color: "#fffff22"}}
+                              android_ripple={{ color: "#ffffff22"}}
+                              onPress={() => handleOfferPress(item)}
                           >
                               {({ pressed }) => (
                                   <Fragment>
@@ -39,6 +61,7 @@ export default function Index() {
                                             className="size-10"
                                             resizeMode="contain"
                                             tintColor="#ffffff"
+                                            style={{ opacity: pressed ? 0.7 : 1 }}
                                           />
                                       </View>
                                   </Fragment>

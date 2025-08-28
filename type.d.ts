@@ -1,4 +1,5 @@
 import { Models } from "react-native-appwrite";
+import { ImageSourcePropType } from "react-native";
 
 export interface MenuItem extends Models.Document {
     name: string;
@@ -8,7 +9,7 @@ export interface MenuItem extends Models.Document {
     calories: number;
     protein: number;
     rating: number;
-    type: string;
+    categories: string;
 }
 
 export interface Category extends Models.Document {
@@ -90,7 +91,7 @@ interface ProfileFieldProps {
     icon: ImageSourcePropType;
 }
 
-interface CreateUserPrams {
+interface CreateUserParams {
     email: string;
     password: string;
     name: string;

@@ -54,10 +54,20 @@ const Search = () => {
 
                         <SearchBar />
 
-                        <Filter categories={categories!} />
+                        <Filter categories={categories as any} />
                     </View>
                 )}
-                ListEmptyComponent={() => !loading && <Text>No results</Text>}
+                ListEmptyComponent={() => !loading && (
+                    <View className="flex-1 justify-center items-center py-20">
+                        <Text className="text-xl text-gray-500 mb-4">No items found</Text>
+                        <Text className="text-gray-400 text-center">
+                            {query || category ? 
+                                'Try adjusting your search or filter criteria' : 
+                                'Start by searching for your favorite food'
+                            }
+                        </Text>
+                    </View>
+                )}
             />
         </SafeAreaView>
     )

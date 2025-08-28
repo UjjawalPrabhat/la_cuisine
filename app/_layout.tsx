@@ -5,6 +5,7 @@ import { useEffect} from "react";
 import './globals.css';
 import * as Sentry from '@sentry/react-native';
 import useAuthStore from "@/store/auth.store";
+import { checkAndSeedDatabase } from "@/lib/autoSeed";
 
 Sentry.init({
   dsn: 'https://94edd17ee98a307f2d85d750574c454a@o4506876178464768.ingest.us.sentry.io/4509588544094208',
@@ -40,6 +41,11 @@ export default Sentry.wrap(function RootLayout() {
 
   useEffect(() => {
     fetchAuthenticatedUser()
+  }, []);
+
+  useEffect(() => {
+    // Auto-seed database if empty
+    checkAndSeedDatabase();
   }, []);
 
   if(!fontsLoaded || isLoading) return null;
