@@ -4,14 +4,14 @@ import {CreateUserParams, GetMenuParams, SignInParams} from "@/type";
 export const appwriteConfig = {
     endpoint: process.env.EXPO_PUBLIC_APPWRITE_ENDPOINT!,
     projectId: process.env.EXPO_PUBLIC_APPWRITE_PROJECT_ID!,
-    platform: "com.jsm.foodordering",
-    databaseId: '68af02a2003afad28b60',
-    bucketId: '68aef974000d4515687c',
-    userCollectionId: '68af02f1001dcd9eb218',
-    categoriesCollectionId: '68af04e40006697dc524',
-    menuCollectionId: '68af0573000c21001cd4',
-    customizationsCollectionId: '68af072400316baf777e',
-    menuCustomizationsCollectionId: '68af0817000bbbb40673'
+    platform: process.env.EXPO_PUBLIC_APPWRITE_PLATFORM || "com.jsm.foodordering",
+    databaseId: process.env.EXPO_PUBLIC_APPWRITE_DATABASE_ID!,
+    bucketId: process.env.EXPO_PUBLIC_APPWRITE_BUCKET_ID!,
+    userCollectionId: process.env.EXPO_PUBLIC_APPWRITE_USER_COLLECTION_ID!,
+    categoriesCollectionId: process.env.EXPO_PUBLIC_APPWRITE_CATEGORIES_COLLECTION_ID!,
+    menuCollectionId: process.env.EXPO_PUBLIC_APPWRITE_MENU_COLLECTION_ID!,
+    customizationsCollectionId: process.env.EXPO_PUBLIC_APPWRITE_CUSTOMIZATIONS_COLLECTION_ID!,
+    menuCustomizationsCollectionId: process.env.EXPO_PUBLIC_APPWRITE_MENU_CUSTOMIZATIONS_COLLECTION_ID!
 }
 
 export const client = new Client();
