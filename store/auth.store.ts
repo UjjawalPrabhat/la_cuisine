@@ -36,7 +36,10 @@ const useAuthStore = create<AuthState>((set) => ({
                 set({ isAuthenticated: false, user: null });
             }
         } catch (e) {
-            console.log('fetchAuthenticatedUser error', e);
+            // Security: Only log in development, don't expose sensitive details
+            if (__DEV__) {
+                console.error('fetchAuthenticatedUser error details:', e);
+            }
             set({ isAuthenticated: false, user: null });
         } finally {
             set({ isLoading: false });
@@ -48,7 +51,12 @@ const useAuthStore = create<AuthState>((set) => ({
             await signOut();
             set({ isAuthenticated: false, user: null });
         } catch (e) {
-            console.log('logout error', e);
+            // Security: Only log in development, don't expose sensitive details  
+            if (__DEV__) {
+                console.error('logout error details:', e);
+            }
+            // Even if signOut fails, clear local state for security
+            set({ isAuthenticated: false, user: null });
         }
     }
 }))

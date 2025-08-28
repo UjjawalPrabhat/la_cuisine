@@ -28,7 +28,10 @@ const data = dummyData as DummyData;
 
 async function simpleSeed(): Promise<void> {
     try {
-        console.log("🌱 Starting simple seeding...");
+        // Security: Only log in development
+        if (__DEV__) {
+            console.log("🌱 Starting simple seeding...");
+        }
 
         // 1. Get existing categories to avoid duplicates
         const existingCategories = await databases.listDocuments(
@@ -57,12 +60,21 @@ async function simpleSeed(): Promise<void> {
                         }
                     );
                     categoryMap[category.name] = doc.$id;
-                    console.log(`✅ Created category: ${category.name}`);
+                    // Security: Only log in development
+                    if (__DEV__) {
+                        console.log(`✅ Created category: ${category.name}`);
+                    }
                 } catch (error: any) {
-                    console.log(`❌ Error creating category ${category.name}:`, error.message);
+                    // Security: Only log detailed errors in development
+                    if (__DEV__) {
+                        console.log(`❌ Error creating category ${category.name}:`, error.message);
+                    }
                 }
             } else {
-                console.log(`⚡ Category ${category.name} already exists`);
+                // Security: Only log in development
+                if (__DEV__) {
+                    console.log(`⚡ Category ${category.name} already exists`);
+                }
             }
         }
 
@@ -95,18 +107,33 @@ async function simpleSeed(): Promise<void> {
                         }
                     );
                     createdCount++;
-                    console.log(`✅ Created menu item: ${item.name}`);
+                    // Security: Only log in development
+                    if (__DEV__) {
+                        console.log(`✅ Created menu item: ${item.name}`);
+                    }
                 } catch (error: any) {
-                    console.log(`❌ Error creating menu item ${item.name}:`, error.message);
+                    // Security: Only log detailed errors in development
+                    if (__DEV__) {
+                        console.log(`❌ Error creating menu item ${item.name}:`, error.message);
+                    }
                 }
             } else {
-                console.log(`⚡ Menu item ${item.name} already exists`);
+                // Security: Only log in development
+                if (__DEV__) {
+                    console.log(`⚡ Menu item ${item.name} already exists`);
+                }
             }
         }
 
-        console.log(`🎉 Simple seeding complete! Created ${createdCount} new menu items.`);
+        // Security: Only log in development
+        if (__DEV__) {
+            console.log(`🎉 Simple seeding complete! Created ${createdCount} new menu items.`);
+        }
     } catch (error) {
-        console.error("💥 Seeding failed:", error);
+        // Security: Only log detailed errors in development
+        if (__DEV__) {
+            console.error("💥 Seeding failed:", error);
+        }
         throw error;
     }
 }

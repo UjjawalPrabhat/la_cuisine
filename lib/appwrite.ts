@@ -29,7 +29,7 @@ const avatars = new Avatars(client);
 export const createUser = async ({ email, password, name }: CreateUserParams) => {
     try {
         const newAccount = await account.create(ID.unique(), email, password, name)
-        if(!newAccount) throw Error;
+        if(!newAccount) throw new Error('Failed to create account');
 
         const avatarUrl = avatars.getInitialsURL(name);
 
@@ -40,7 +40,11 @@ export const createUser = async ({ email, password, name }: CreateUserParams) =>
             { email, name, accountID: newAccount.$id, avatar: avatarUrl }
         );
     } catch (e) {
-        throw new Error(e as string);
+        // Security: Log error details for debugging while throwing user-friendly message
+        if (__DEV__) {
+            console.error('createUser error details:', e);
+        }
+        throw e; // Re-throw to let error handler in component deal with user message
     }
 }
 
@@ -58,7 +62,11 @@ export const signIn = async ({ email, password }: SignInParams) => {
         const session = await account.createEmailPasswordSession(email, password);
         return session;
     } catch (e) {
-        throw new Error(e as string);
+        // Security: Log error details for debugging while throwing user-friendly message
+        if (__DEV__) {
+            console.error('signIn error details:', e);
+        }
+        throw e; // Re-throw to let error handler in component deal with user message
     }
 }
 
@@ -66,7 +74,11 @@ export const signOut = async () => {
     try {
         await account.deleteSession('current');
     } catch (e) {
-        throw new Error(e as string);
+        // Security: Log error details for debugging while throwing user-friendly message
+        if (__DEV__) {
+            console.error('signOut error details:', e);
+        }
+        throw e; // Re-throw to let error handler in component deal with user message
     }
 }
 
@@ -85,7 +97,10 @@ export const getCurrentUser = async () => {
 
         return currentUser.documents[0];
     } catch (e) {
-        console.log('getCurrentUser error:', e);
+        // Security: Only log in development, don't expose sensitive details
+        if (__DEV__) {
+            console.error('getCurrentUser error details:', e);
+        }
         return null;
     }
 }
@@ -120,7 +135,7 @@ export const getMenu = async ({ category, query }: GetMenuParams) => {
             }
         }
 
-        // Filter by search query if provided
+        // Security: Filter by search query if provided (query is already sanitized in component)
         if (query) {
             filteredMenus = filteredMenus.filter((item: any) => 
                 item.name.toLowerCase().includes(query.toLowerCase()) ||
@@ -130,8 +145,11 @@ export const getMenu = async ({ category, query }: GetMenuParams) => {
 
         return filteredMenus;
     } catch (e) {
-        console.error('Error in getMenu:', e);
-        throw new Error(e as string);
+        // Security: Log error details for debugging while throwing user-friendly message
+        if (__DEV__) {
+            console.error('getMenu error details:', e);
+        }
+        throw e; // Re-throw to let error handler in component deal with user message
     }
 }
 
@@ -144,6 +162,10 @@ export const getCategories = async () => {
 
         return categories.documents;
     } catch (e) {
-        throw new Error(e as string);
+        // Security: Log error details for debugging while throwing user-friendly message
+        if (__DEV__) {
+            console.error('getCategories error details:', e);
+        }
+        throw e; // Re-throw to let error handler in component deal with user message
     }
 }

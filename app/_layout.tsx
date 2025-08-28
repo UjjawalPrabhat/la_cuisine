@@ -7,8 +7,9 @@ import * as Sentry from '@sentry/react-native';
 import useAuthStore from "@/store/auth.store";
 import { checkAndSeedDatabase } from "@/lib/autoSeed";
 
+// Security: Use environment variable for Sentry DSN instead of hardcoding
 Sentry.init({
-  dsn: 'https://94edd17ee98a307f2d85d750574c454a@o4506876178464768.ingest.us.sentry.io/4509588544094208',
+  dsn: process.env.EXPO_PUBLIC_SENTRY_DSN,
 
   // Adds more context data to events (IP address, cookies, user, etc.)
   // For more information, visit: https://docs.sentry.io/platforms/react-native/data-management/data-collected/

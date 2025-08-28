@@ -49,7 +49,10 @@ export const checkAndSeedDatabase = async (): Promise<void> => {
 
         // Only seed if both collections are empty
         if (existingCategories.documents.length === 0 && existingMenuItems.documents.length === 0) {
-            console.log('🌱 Database is empty, starting auto-seeding...');
+            // Security: Only log in development
+            if (__DEV__) {
+                if (__DEV__) console.log('🌱 Database is empty, starting auto-seeding...');
+            }
 
             // 1. Create Categories and map them
             const categoryMap: Record<string, string> = {};
@@ -62,9 +65,9 @@ export const checkAndSeedDatabase = async (): Promise<void> => {
                         cat
                     );
                     categoryMap[cat.name] = doc.$id;
-                    console.log(`✅ Created category: ${cat.name}`);
+                    if (__DEV__) console.log(`✅ Created category: ${cat.name}`);
                 } catch (error) {
-                    console.error(`❌ Error creating category ${cat.name}:`, error);
+                    if (__DEV__) console.error(`❌ Error creating category ${cat.name}:`, error);
                 }
             }
 
@@ -83,9 +86,9 @@ export const checkAndSeedDatabase = async (): Promise<void> => {
                         }
                     );
                     customizationMap[cus.name] = doc.$id;
-                    console.log(`✅ Created customization: ${cus.name}`);
+                    if (__DEV__) console.log(`✅ Created customization: ${cus.name}`);
                 } catch (error) {
-                    console.error(`❌ Error creating customization ${cus.name}:`, error);
+                    if (__DEV__) console.error(`❌ Error creating customization ${cus.name}:`, error);
                 }
             }
 
@@ -110,7 +113,7 @@ export const checkAndSeedDatabase = async (): Promise<void> => {
                     );
 
                     createdItemsCount++;
-                    console.log(`✅ Created menu item: ${item.name}`);
+                    if (__DEV__) console.log(`✅ Created menu item: ${item.name}`);
 
                     // 4. Create menu_customizations relationships
                     for (const cusName of item.customizations) {
@@ -126,18 +129,18 @@ export const checkAndSeedDatabase = async (): Promise<void> => {
                                     }
                                 );
                             } catch (error) {
-                                console.error(`❌ Error linking ${item.name} with ${cusName}:`, error);
+                                if (__DEV__) console.error(`❌ Error linking ${item.name} with ${cusName}:`, error);
                             }
                         }
                     }
                 } catch (error) {
-                    console.error(`❌ Error creating menu item ${item.name}:`, error);
+                    if (__DEV__) console.error(`❌ Error creating menu item ${item.name}:`, error);
                 }
             }
 
-            console.log(`🎉 Auto-seeding complete! Created ${Object.keys(categoryMap).length} categories, ${Object.keys(customizationMap).length} customizations, and ${createdItemsCount} menu items.`);
+            if (__DEV__) console.log(`🎉 Auto-seeding complete! Created ${Object.keys(categoryMap).length} categories, ${Object.keys(customizationMap).length} customizations, and ${createdItemsCount} menu items.`);
         } else if (existingCategories.documents.length > 0 && existingMenuItems.documents.length === 0) {
-            console.log('📊 Categories exist but no menu items found. Adding menu items and customizations...');
+            if (__DEV__) console.log('📊 Categories exist but no menu items found. Adding menu items and customizations...');
             
             // Get existing categories and create map
             const categoryMap: Record<string, string> = {};
@@ -166,9 +169,9 @@ export const checkAndSeedDatabase = async (): Promise<void> => {
                             }
                         );
                         customizationMap[cus.name] = doc.$id;
-                        console.log(`✅ Created customization: ${cus.name}`);
+                        if (__DEV__) console.log(`✅ Created customization: ${cus.name}`);
                     } catch (error) {
-                        console.error(`❌ Error creating customization ${cus.name}:`, error);
+                        if (__DEV__) console.error(`❌ Error creating customization ${cus.name}:`, error);
                     }
                 }
             } else {
@@ -199,7 +202,7 @@ export const checkAndSeedDatabase = async (): Promise<void> => {
                     );
 
                     createdItemsCount++;
-                    console.log(`✅ Created menu item: ${item.name}`);
+                    if (__DEV__) console.log(`✅ Created menu item: ${item.name}`);
 
                     // Create menu_customizations relationships
                     for (const cusName of item.customizations) {
@@ -215,20 +218,20 @@ export const checkAndSeedDatabase = async (): Promise<void> => {
                                     }
                                 );
                             } catch (error) {
-                                console.error(`❌ Error linking ${item.name} with ${cusName}:`, error);
+                                if (__DEV__) console.error(`❌ Error linking ${item.name} with ${cusName}:`, error);
                             }
                         }
                     }
                 } catch (error) {
-                    console.error(`❌ Error creating menu item ${item.name}:`, error);
+                    if (__DEV__) console.error(`❌ Error creating menu item ${item.name}:`, error);
                 }
             }
             
-            console.log(`🎉 Menu seeding complete! Created ${createdItemsCount} menu items.`);
+            if (__DEV__) console.log(`🎉 Menu seeding complete! Created ${createdItemsCount} menu items.`);
         } else {
-            console.log('📊 Database already contains data, skipping auto-seeding.');
+            if (__DEV__) console.log('📊 Database already contains data, skipping auto-seeding.');
         }
     } catch (error) {
-        console.error('❌ Auto-seeding failed:', error);
+        if (__DEV__) console.error('❌ Auto-seeding failed:', error);
     }
 };

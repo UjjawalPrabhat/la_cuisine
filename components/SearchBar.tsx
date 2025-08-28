@@ -1,20 +1,39 @@
 import {images} from "@/constants";
 import { router, useLocalSearchParams } from "expo-router";
 import React, { useState } from "react";
-import { Image, TextInput, TouchableOpacity, View } from "react-native";
+import { Image, TextInput, TouchableOpacity, View, Alert } from "react-native";
+import { validateSearchInput } from "@/lib/validation";
 
 const Searchbar = () => {
     const params = useLocalSearchParams<{ query: string }>();
     const [query, setQuery] = useState(params.query);
 
     const handleSearch = (text: string) => {
-        setQuery(text);
+        // Security: Validate and sanitize search input
+        const validation = validateSearchInput(text);
+        
+        if (!validation.isValid) {
+            Alert.alert('Invalid Search', validation.message || 'Please enter a valid search term');
+            return;
+        }
 
-        if(!text) router.setParams({ query: undefined });
+        setQuery(validation.sanitized);
+
+        if(!validation.sanitized) router.setParams({ query: undefined });
     };
 
     const handleSubmit = () => {
-        if(query.trim()) router.setParams({ query });
+        // Security: Validate search input before submission
+        const validation = validateSearchInput(query || '');
+        
+        if (!validation.isValid) {
+            Alert.alert('Invalid Search', validation.message || 'Please enter a valid search term');
+            return;
+        }
+
+        if(validation.sanitized.trim()) {
+            router.setParams({ query: validation.sanitized });
+        }
     }
 
     return (
@@ -27,10 +46,13 @@ const Searchbar = () => {
                 onSubmitEditing={handleSubmit}
                 placeholderTextColor="#A0A0A0"
                 returnKeyType="search"
+                maxLength={100}
+                autoCapitalize="none"
+                autoCorrect={false}
             />
             <TouchableOpacity
                 className="pr-5"
-                onPress={() => router.setParams({ query })}
+                onPress={handleSubmit}
             >
                 <Image
                     source={images.search}

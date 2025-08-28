@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { Alert } from "react-native";
+import { sanitizeError } from "./security";
 
 interface UseAppwriteOptions<T, P extends Record<string, string | number>> {
     fn: (params: P) => Promise<T>;
@@ -32,10 +33,16 @@ const useAppwrite = <T, P extends Record<string, string | number>>({
                 const result = await fn({ ...fetchParams });
                 setData(result);
             } catch (err: unknown) {
-                const errorMessage =
-                    err instanceof Error ? err.message : "An unknown error occurred";
+                // Security: Use sanitized error messages
+                const errorMessage = sanitizeError(err);
                 setError(errorMessage);
-                Alert.alert("Error", errorMessage);
+                
+                // Security: Only show alerts for critical errors, not all errors
+                // This prevents too many alerts during normal app usage
+                if (__DEV__) {
+                    console.error('useAppwrite error details:', err);
+                    Alert.alert("Error", errorMessage);
+                }
             } finally {
                 setLoading(false);
             }

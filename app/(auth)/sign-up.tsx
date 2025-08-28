@@ -5,16 +5,59 @@ import CustomButton from "@/components/CustomButton";
 import {useState} from "react";
 import {createUser, signIn} from "@/lib/appwrite";
 import useAuthStore from "@/store/auth.store";
+import { validateEmail, validatePassword, validateName } from "@/lib/validation";
+import { sanitizeError, authRateLimit } from "@/lib/security";
+import * as Sentry from '@sentry/react-native';
 
 const SignUp = () => {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [form, setForm] = useState({ name: '', email: '', password: '' });
+    const [errors, setErrors] = useState({ name: '', email: '', password: '' });
     const { fetchAuthenticatedUser } = useAuthStore();
+
+    const validateForm = (): boolean => {
+        const newErrors = { name: '', email: '', password: '' };
+        let isValid = true;
+
+        // Security: Validate name
+        const nameValidation = validateName(form.name);
+        if (!nameValidation.isValid) {
+            newErrors.name = nameValidation.message || '';
+            isValid = false;
+        }
+
+        // Security: Validate email format
+        const emailValidation = validateEmail(form.email);
+        if (!emailValidation.isValid) {
+            newErrors.email = emailValidation.message || '';
+            isValid = false;
+        }
+
+        // Security: Validate password strength
+        const passwordValidation = validatePassword(form.password);
+        if (!passwordValidation.isValid) {
+            newErrors.password = passwordValidation.message || '';
+            isValid = false;
+        }
+
+        setErrors(newErrors);
+        return isValid;
+    };
 
     const submit = async () => {
         const { name, email, password } = form;
 
-        if(!name || !email || !password) return Alert.alert('Error', 'Please enter valid email address & password.');
+        // Security: Client-side input validation
+        if (!validateForm()) {
+            return;
+        }
+
+        // Security: Rate limiting protection
+        if (!authRateLimit.isAllowed(email)) {
+            const remainingTime = Math.ceil(authRateLimit.getRemainingTime(email) / 1000 / 60);
+            Alert.alert('Too Many Attempts', `Please wait ${remainingTime} minutes before trying again.`);
+            return;
+        }
 
         setIsSubmitting(true)
 
@@ -30,7 +73,20 @@ const SignUp = () => {
 
             router.replace('/');
         } catch(error: any) {
-            Alert.alert('Error', error.message);
+            // Security: Use sanitized error messages
+            const userMessage = sanitizeError(error);
+            Alert.alert('Account Creation Failed', userMessage);
+            
+            // Security: Log actual error for debugging (only in development)
+            if (__DEV__) {
+                console.warn('Sign-up error:', error);
+            }
+            
+            // Security: Report error to monitoring without sensitive data
+            Sentry.captureException(error, {
+                tags: { action: 'sign_up' },
+                extra: { email: email.replace(/(?<=.{2}).*(?=@)/, '***') } // Mask email for privacy
+            });
         } finally {
             setIsSubmitting(false);
         }
@@ -41,22 +97,34 @@ const SignUp = () => {
             <CustomInput
                 placeholder="Enter your full name"
                 value={form.name}
-                onChangeText={(text) => setForm((prev) => ({ ...prev, name: text }))}
+                onChangeText={(text) => {
+                    setForm((prev) => ({ ...prev, name: text }));
+                    if (errors.name) setErrors((prev) => ({ ...prev, name: '' }));
+                }}
                 label="Full name"
+                error={errors.name}
             />
             <CustomInput
                 placeholder="Enter your email"
                 value={form.email}
-                onChangeText={(text) => setForm((prev) => ({ ...prev, email: text }))}
+                onChangeText={(text) => {
+                    setForm((prev) => ({ ...prev, email: text }));
+                    if (errors.email) setErrors((prev) => ({ ...prev, email: '' }));
+                }}
                 label="Email"
                 keyboardType="email-address"
+                error={errors.email}
             />
             <CustomInput
                 placeholder="Enter your password"
                 value={form.password}
-                onChangeText={(text) => setForm((prev) => ({ ...prev, password: text }))}
+                onChangeText={(text) => {
+                    setForm((prev) => ({ ...prev, password: text }));
+                    if (errors.password) setErrors((prev) => ({ ...prev, password: '' }));
+                }}
                 label="Password"
                 secureTextEntry={true}
+                error={errors.password}
             />
 
             <CustomButton

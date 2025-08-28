@@ -6,16 +6,50 @@ import {useState} from "react";
 import {signIn} from "@/lib/appwrite";
 import * as Sentry from '@sentry/react-native'
 import useAuthStore from "@/store/auth.store";
+import { validateEmail } from "@/lib/validation";
+import { sanitizeError, authRateLimit } from "@/lib/security";
 
 const SignIn = () => {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [form, setForm] = useState({ email: '', password: '' });
+    const [errors, setErrors] = useState({ email: '', password: '' });
     const { fetchAuthenticatedUser } = useAuthStore();
+
+    const validateForm = (): boolean => {
+        const newErrors = { email: '', password: '' };
+        let isValid = true;
+
+        // Security: Validate email format
+        const emailValidation = validateEmail(form.email);
+        if (!emailValidation.isValid) {
+            newErrors.email = emailValidation.message || '';
+            isValid = false;
+        }
+
+        // Security: Basic password validation
+        if (!form.password) {
+            newErrors.password = 'Password is required';
+            isValid = false;
+        }
+
+        setErrors(newErrors);
+        return isValid;
+    };
 
     const submit = async () => {
         const { email, password } = form;
 
-        if(!email || !password) return Alert.alert('Error', 'Please enter valid email address & password.');
+        // Security: Client-side input validation
+        if (!validateForm()) {
+            return;
+        }
+
+        // Security: Rate limiting protection
+        if (!authRateLimit.isAllowed(email)) {
+            const remainingTime = Math.ceil(authRateLimit.getRemainingTime(email) / 1000 / 60);
+            Alert.alert('Too Many Attempts', `Please wait ${remainingTime} minutes before trying again.`);
+            return;
+        }
 
         setIsSubmitting(true)
 
@@ -27,8 +61,20 @@ const SignIn = () => {
 
             router.replace('/');
         } catch(error: any) {
-            Alert.alert('Error', error.message);
-            Sentry.captureEvent(error);
+            // Security: Use sanitized error messages
+            const userMessage = sanitizeError(error);
+            Alert.alert('Sign In Failed', userMessage);
+            
+            // Security: Log actual error for debugging (only in development)
+            if (__DEV__) {
+                console.warn('Sign-in error:', error);
+            }
+            
+            // Security: Report error to monitoring without sensitive data
+            Sentry.captureException(error, {
+                tags: { action: 'sign_in' },
+                extra: { email: email.replace(/(?<=.{2}).*(?=@)/, '***') } // Mask email for privacy
+            });
         } finally {
             setIsSubmitting(false);
         }
@@ -39,16 +85,24 @@ const SignIn = () => {
             <CustomInput
                 placeholder="Enter your email"
                 value={form.email}
-                onChangeText={(text) => setForm((prev) => ({ ...prev, email: text }))}
+                onChangeText={(text) => {
+                    setForm((prev) => ({ ...prev, email: text }));
+                    if (errors.email) setErrors((prev) => ({ ...prev, email: '' }));
+                }}
                 label="Email"
                 keyboardType="email-address"
+                error={errors.email}
             />
             <CustomInput
                 placeholder="Enter your password"
                 value={form.password}
-                onChangeText={(text) => setForm((prev) => ({ ...prev, password: text }))}
+                onChangeText={(text) => {
+                    setForm((prev) => ({ ...prev, password: text }));
+                    if (errors.password) setErrors((prev) => ({ ...prev, password: '' }));
+                }}
                 label="Password"
                 secureTextEntry={true}
+                error={errors.password}
             />
 
             <CustomButton

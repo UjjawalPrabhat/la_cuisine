@@ -30,7 +30,10 @@ const MenuDetail = () => {
       );
       setMenuItem(response as MenuItem);
     } catch (error) {
-      console.error('Error fetching menu item:', error);
+      // Security: Only log detailed errors in development
+      if (__DEV__) {
+        console.error('Error fetching menu item:', error);
+      }
       Alert.alert('Error', 'Failed to load menu item');
     } finally {
       setLoading(false);
